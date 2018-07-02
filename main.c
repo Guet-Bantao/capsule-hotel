@@ -46,7 +46,7 @@ static pthread_cond_t  alsa_con_var = PTHREAD_COND_INITIALIZER;
 int choice_play = 0;
 
 static pthread_mutex_t socket_mutex  = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t safe_mutex  = PTHREAD_MUTEX_INITIALIZER;
+//static pthread_mutex_t safe_mutex  = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t sleep_mutex  = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -57,7 +57,7 @@ wifi_opr  *wifi_device;
 int hc_04_distance(void)
 {
 	int fd_hc04;
-	int distance=0;
+	unsigned char distance=0;
 	
 	fd_hc04 = open("/dev/hc04", O_RDWR);
 	if (fd_hc04 < 0)
@@ -68,14 +68,13 @@ int hc_04_distance(void)
 	read(fd_hc04,&distance,1);
 	printf("distance is %d us\n",distance);
 
-	if(distance>=2300)
+	if(distance==0)
 	{
 			/* »½ÐÑ·¢ËÍÏß³Ì */
 			pthread_mutex_lock(&send_mutex);
 			pthread_cond_signal(&send_con_var);
 			pthread_mutex_unlock(&send_mutex);
 		
-			printf("start take a pictuer at distance is %d us\n",distance);
 	}
 	else
 	{
@@ -260,7 +259,7 @@ float Angle_Calcu(int mpu6050[6])
 	return Kalman_Filter_X(Angle_x_temp, Gyro_x);	//¿¨¶ûÂüÂË²¨¼ÆËãXÇã½Ç
 }
 
-int safe=0;
+//int safe=0;
 int my_sleep=0;
 int main(int argc, char **argv)
 {
@@ -308,16 +307,7 @@ int main(int argc, char **argv)
 
 	while (1)
     {	
-		pthread_mutex_lock(&safe_mutex);
-		if(safe)
-		{
-			pthread_mutex_unlock(&safe_mutex);
-			hc_04_distance();
-		}
-		else
-		{
-			pthread_mutex_unlock(&safe_mutex);
-		}
+		hc_04_distance();
 		
 		usleep(1000000);//run once a second
 	}
@@ -481,8 +471,8 @@ static void *play_thread(void *arg)
 		{
 			case 5:relay_contrl(fd_relay,1);open_sound("welcome.wav");relay_contrl(fd_relay,0);break;//¿ªËø
 			//case 2:open_sound("suo.wav");break;
-			case 6: pthread_mutex_lock(&safe_mutex); safe = 1; pthread_mutex_unlock(&safe_mutex); open_sound("anquan.wav");break;
-			case 7: pthread_mutex_lock(&safe_mutex); safe = 0; pthread_mutex_unlock(&safe_mutex); open_sound("jiechu.wav");break;
+			//case 6: pthread_mutex_lock(&safe_mutex); safe = 1; pthread_mutex_unlock(&safe_mutex); open_sound("anquan.wav");break;
+			//case 7: pthread_mutex_lock(&safe_mutex); safe = 0; pthread_mutex_unlock(&safe_mutex); open_sound("jiechu.wav");break;
 
 			case 8:open_sound("Co.wav");break;
 
